@@ -74,13 +74,15 @@ def get_posts_list(feed_list, START):
     """
     Spawn a worker thread for each feed.
     """
-    posts = []
+    posts = {}
     ths = []
     lock = threading.Lock()
 
-    def append_posts(new_posts):
+    def append_posts(blog, new_posts):
         lock.acquire()
-        posts.extend(new_posts)
+        if blog not in posts:
+            posts[blog] = []
+        posts[blog].extend(new_posts)
         lock.release()
 
     for link in feed_list:
@@ -140,9 +142,10 @@ html_tail = u"""
 
 html_perpost = u"""
     <article>
-        <h1><strong>{title}</strong> <small>[{blog}]</small> </h1>
+        <h2><strong>{title}</strong> <small>[{blog}]</small> </h2>
         <p><small>By {author} for <i>{blog}</i>, on {nicedate} at {nicetime}.</small></p>
          {body}
+         <hr />
     </article>
 """
 
@@ -193,16 +196,22 @@ def do_one_round():
     logging.info(f"Collecting posts since {start}")
 
     posts = get_posts_list(load_feeds(), start)
-    posts.sort()
 
-    logging.info(f"Downloaded {len(posts)} posts")
+    logging.info(f"Downloaded {len(posts)} feeds")
 
     if posts:
         logging.info("Compiling newspaper")
 
         result = html_head + \
+            u"\n".join([f"<h1>{feed_url}</h1>" + \
+                        u"\n".join([html_perpost.format(**nicepost(post)) for post in feed_posts])
+                        for feed_url, feed_posts in posts.items()]) + html_tail
+
+        
+        '''result = html_head + \
             u"\n".join([html_perpost.format(**nicepost(post))
-                        for post in posts]) + html_tail
+                        for post in posts]) + html_tail'''
+        
 
         logging.info("Creating epub")
         today_date = datetime.today().date()
@@ -234,6 +243,7 @@ def do_one_round():
 
     logging.info("Finished.")
     update_start(now)
+
 
 def get_next_x_am():
     tz = get_localzone()

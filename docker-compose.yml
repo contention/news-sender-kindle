@@ -15,9 +15,6 @@ services:
         source: src
         target: /src
       - type: bind
-        source: books-config
-        target: /books-config
-      - type: bind
         source: morss.py
         target: /usr/local/lib/python3.8/site-packages/morss/morss.py
     environment:

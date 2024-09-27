@@ -44,7 +44,7 @@ class FeedparserThread(threading.Thread):
             if post:
                 myposts.append(post)
         myposts.sort()
-        self.append_posts_func(myposts)
+        self.append_posts_func(blog, myposts)
 
 
 def process_entry(entry, blog, START):
