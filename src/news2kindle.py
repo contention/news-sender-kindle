@@ -117,7 +117,8 @@ def nicepost(post):
 
 
 # <link rel="stylesheet" type="text/css" href="style.css">
-html_head = u"""<html>
+readabletime = time.ctime()
+html_head = f"""<html>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width" />
 <head>
@@ -126,7 +127,7 @@ html_head = u"""<html>
   <meta name="apple-mobile-web-app-capable" content="yes" />
 <style>
 </style>
-<title>THE DAILY NEWS</title>
+<title>NEWS: {readabletime}</title>
 </head>
 <body>
 
@@ -139,7 +140,7 @@ html_tail = u"""
 
 html_perpost = u"""
     <article>
-        <h1><a href="{link}">{title}</a></h1>
+        <h1><strong>{title}</strong> <small>[{blog}]</small> </h1>
         <p><small>By {author} for <i>{blog}</i>, on {nicedate} at {nicetime}.</small></p>
          {body}
     </article>
@@ -214,6 +215,7 @@ def do_one_round():
                               format="html",
                               outputfile=epubFile,
                               extra_args=["--standalone",
+                                            f"--toc",
                                           f"--epub-cover-image={COVER_FILE}",
                                           ])
         convert_ebook(epubFile, mobiFile)

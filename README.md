@@ -1,3 +1,36 @@
+# Forked Instructions
+
+## Environment variables
+
+Create an .env file:
+
+````
+EMAIL_SMTP=smtp.gmail.com
+EMAIL_SMTP_PORT=465
+EMAIL_USER=username@gmail.com
+EMAIL_PASSWORD=password
+EMAIL_FROM=username@gmail.com
+KINDLE_EMAIL=username@kindle.com
+UPDATE_PERIOD=24
+FETCH_PERIOD=24
+ITEM=20
+HOUR=5
+MINUTES=0
+ENCRYPTION=SSL
+````
+
+## Starting a container
+
+1. `cd` to repo directory
+
+2. Run `docker compose --env-file [PATH TO DEVELOPMENT ENV FILE] up`
+
+
+
+
+
+
+
 # news-sender-kindle
 # Send your RSS news to your Kindle
 
