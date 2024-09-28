@@ -20,5 +20,13 @@ https://www.theguardian.com/science/rss
 https://www.theguardian.com/society/rss
 https://www.theguardian.com/commentisfree/rss
 https://bikepacking.com/feed/
+https://nsmb.com/articles/rss
+https://www.singletrackworld.com/category/news/feed
+https://www.dirtmountainbike.com/news/feed
+https://www.surfer.com/.rss/full/
+https://www.carvemag.com/feed/
 https://tracksmag.com.au/feed
+https://news.ycombinator.com/rss
+https://www.techcrunch.com/feed
+https://www.dcrainmaker.com/feed
 https://www.metoffice.gov.uk/public/data/PWSCache/WarningsRSS/Region/UK
