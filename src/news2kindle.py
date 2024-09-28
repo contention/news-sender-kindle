@@ -32,14 +32,17 @@ EMAIL_PASSWD = os.getenv("EMAIL_PASSWORD")
 EMAIL_FROM = os.getenv("EMAIL_FROM")
 KINDLE_EMAIL = os.getenv("KINDLE_EMAIL")
 PANDOC = os.getenv("PANDOC_PATH", "/usr/bin/pandoc")
-PERIOD = int(os.getenv("UPDATE_PERIOD", 24))  # hours between RSS pulls
-FETCH_PERIOD=int(os.getenv("FETCH_PERIOD",24))
-HOUR=int(os.getenv("HOUR",0))
-MINUTE=int(os.getenv("MINUTES",0))
+
+PERIOD = int(os.getenv("UPDATE_PERIOD", 8))  # hours between RSS pulls
+FETCH_PERIOD=int(os.getenv("FETCH_PERIOD",8))
 ENCRYPTION = os.getenv("ENCRYPTION")
 
 FEED_FILE = '/config/feeds.txt'
 COVER_FILE = '/books-config/cover.png'
+
+RUN_TIMES = [(6, 0), (14, 0), (22, 0)]
+
+SEND_EMAIL = True
 
 
 feed_file = os.path.expanduser(FEED_FILE)
@@ -142,7 +145,7 @@ html_tail = u"""
 
 html_perpost = u"""
     <article>
-        <h2><strong>{title}</strong> <small>[{blog}]</small> </h2>
+        <h2>{title}</h2>
         <p><small>By {author} for <i>{blog}</i>, on {nicedate} at {nicetime}.</small></p>
          {body}
          <hr />
@@ -203,7 +206,7 @@ def do_one_round():
         logging.info("Compiling newspaper")
 
         result = html_head + \
-            u"\n".join([f"<h1>{feed_url}</h1>" + \
+            u"\n".join([f"<br pagebreak=\"always\"><h1>{feed_url}</h1>" + \
                         u"\n".join([html_perpost.format(**nicepost(post)) for post in feed_posts])
                         for feed_url, feed_posts in posts.items()]) + html_tail
 
@@ -231,32 +234,44 @@ def do_one_round():
         epubFile_2 = str(today_date)+'_news.epub'
         convert_ebook(mobiFile, epubFile_2)
 
-        logging.info("Sending to kindle email")
-        send_mail(send_from=EMAIL_FROM,
-                  send_to=[KINDLE_EMAIL],
-                  subject="Daily news - "+str(today_date),
-                  text="This is your daily news.\n\n--\n\n",
-                  files=[epubFile_2])
-        logging.info("Cleaning up...")
-        os.remove(epubFile)
-        os.remove(mobiFile)
+        if not SEND_EMAIL:
+            logging.info("Not sending email, as SEND_EMAIL is False")
+        else:
+            logging.info("Sending to kindle email")
+            send_mail(send_from=EMAIL_FROM,
+                    send_to=[KINDLE_EMAIL],
+                    subject="Daily news - "+str(today_date),
+                    text="This is your daily news.\n\n--\n\n",
+                    files=[epubFile_2])
+            logging.info("Cleaning up...")
+            os.remove(epubFile)
+            os.remove(mobiFile)
 
     logging.info("Finished.")
     update_start(now)
 
 
-def get_next_x_am():
+def get_next_run_time():
     tz = get_localzone()
-    timezone=pytz.timezone(tz.key)
+    timezone = pytz.timezone(tz.key)
     now = datetime.now(tz=timezone)
-    next_x_am = now.replace(hour=HOUR, minute=MINUTE, second=0, microsecond=0)
-    if now >= next_x_am:
-        next_x_am += timedelta(days=1)
-    return (next_x_am - now).total_seconds()
+    
+    # Calculate the next run time
+    next_run_time = None
+    for hour, minute in RUN_TIMES:
+        run_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if now < run_time:
+            next_run_time = run_time
+            break
+    
+    # If no future run time is found for today, take the first run time of the next day
+    if next_run_time is None:
+        next_run_time = now.replace(hour=RUN_TIMES[0][0], minute=RUN_TIMES[0][1], second=0, microsecond=0) + timedelta(days=1)
+    
+    return (next_run_time - now).total_seconds()
 
 if __name__ == '__main__':
     while True:
         do_one_round()
-        seconds = get_next_x_am()
-        # seconds = PERIOD*3600
+        seconds = get_next_run_time()
         time.sleep(seconds)

@@ -27,8 +27,6 @@ services:
       UPDATE_PERIOD: ${UPDATE_PERIOD}
       FETCH_PERIOD: ${FETCH_PERIOD}
       ITEM: ${ITEM}
-      HOUR: ${HOUR}
-      MINUTES: ${MINUTES}
       ENCRYPTION: ${ENCRYPTION}
     restart: always
 
