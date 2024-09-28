@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 import os
 import feedparser
 from FeedparserThread import FeedparserThread
+from PIL import Image, ImageDraw, ImageFont
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,14 +39,23 @@ FETCH_PERIOD=int(os.getenv("FETCH_PERIOD",8))
 ENCRYPTION = os.getenv("ENCRYPTION")
 
 FEED_FILE = '/config/feeds.txt'
-COVER_FILE = '/books-config/cover.png'
+COVER_FILE = '/cover.png'
 
 RUN_TIMES = [(6, 0), (14, 0), (22, 0)]
 
 SEND_EMAIL = True
 
+readabletime = datetime.now().strftime("%H:%M%p on %A %d %B, %Y")
+readabletimewrapped = datetime.now().strftime("%H:%M%p \n%A %d %B \n%Y")
 
 feed_file = os.path.expanduser(FEED_FILE)
+
+def create_cover():
+    img = Image.new('RGB', (600, 800), color = (73, 109, 137))
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 35, encoding="unic")
+    d = ImageDraw.Draw(img)
+    d.text((50,50), f"News \n{readabletimewrapped}", font=font, fill=(255,255,0))
+    img.save(COVER_FILE)
 
 def load_feeds():
     """Return a list of the feeds for download.
@@ -122,7 +132,7 @@ def nicepost(post):
 
 
 # <link rel="stylesheet" type="text/css" href="style.css">
-readabletime = time.ctime()
+
 html_head = f"""<html>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width" />
@@ -191,16 +201,20 @@ def convert_ebook(input_file, output_file):
 
 
 def do_one_round():
-    # get all posts from starting point to now
+    
     now = pytz.utc.localize(datetime.now())
     #midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Create cover image
+    create_cover();
+    
+    # get all posts from starting point to now
     start = get_start(feed_file)
 
     logging.info(f"Collecting posts since {start}")
-
     posts = get_posts_list(load_feeds(), start)
-
     logging.info(f"Downloaded {len(posts)} feeds")
+
 
     if posts:
         logging.info("Compiling newspaper")
