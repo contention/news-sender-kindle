@@ -279,7 +279,7 @@ def FeedFetch(url, options):
         req = crawler.adv_get(url=url, post=options.post, follow=('rss' if not options.items else None), policy=policy, force_min=5*60, force_max=60*60, timeout=TIMEOUT)
 
     except (IOError, HTTPException):
-        raise MorssException('Error downloading feed')
+        raise MorssException(f'Error downloading feed: {url}')
 
     if options.items:
         # using custom rules
@@ -314,7 +314,7 @@ def FeedFetch(url, options):
         except TypeError:
             log('random page')
             log(req['contenttype'])
-            raise MorssException('Link provided is not a valid feed')
+            raise MorssException(f'Link provided is not a valid feed: {url}')
 
     return req['url'], rss
 
