@@ -12,8 +12,8 @@ services:
         source: config
         target: /config
       - type: bind
-        source: src
-        target: /src
+        source: app
+        target: /app
       - type: bind
         source: morss.py
         target: /usr/local/lib/python3.8/site-packages/morss/morss.py

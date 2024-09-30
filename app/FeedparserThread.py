@@ -1,6 +1,7 @@
 import pytz
 import time
 from datetime import datetime, timedelta
+from tzlocal import get_localzone
 import collections
 import threading
 import feedparser
@@ -63,7 +64,8 @@ def process_entry(entry, blog, START):
             return  # Ignore undateable posts
 
     if when:
-        when = pytz.utc.localize(datetime.fromtimestamp(time.mktime(when)))
+        when = datetime.fromtimestamp(time.mktime(when))
+        #when = pytz.utc.localize(datetime.fromtimestamp(time.mktime(when)))
     else:
         # print blog, entry
         return

@@ -25,7 +25,7 @@ ENCRYPTION=SSL
 
 2. Run `docker compose --env-file [PATH TO DEVELOPMENT ENV FILE] up`
 
-
+3. Set up cron on host to run `docker exec newssenderkindle-development-1 python3 /app/news2kindle.py`
 
 
 

@@ -1,7 +1,17 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# idea and original code from from from https://gist.github.com/alexwlchan/01cec115a6f51d35ab26
+# https://www.reddit.com/r/selfhosted/comments/1aoz6pv/selfhosted_python_news_sender_script_to_kindle/
+
+# Pseudocode
+# Need to run this as a cron job at 6am, 12pm, 6pm and 9pm.
+# Pull the RSS feeds from the list of feeds.
+# Get the posts from the feeds since the last time the feeds were pulled. If it's the first time, get all posts.
+# Create an epub file with the posts.
+# Send the epub file to the kindle email.
+# Delete the epub file.
+# Update a system variable with the last time the feeds were pulled.
+
 
 # PYTHON boilerplate
 from email.utils import COMMASPACE, formatdate
@@ -18,7 +28,7 @@ import time
 import logging
 import threading
 import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import feedparser
 from FeedparserThread import FeedparserThread
@@ -45,17 +55,24 @@ RUN_TIMES = [(6, 0), (14, 0), (22, 0)]
 
 SEND_EMAIL = True
 
-readabletime = datetime.now().strftime("%H:%M%p on %A %d %B, %Y")
-readabletimewrapped = datetime.now().strftime("%H:%M%p \n%A %d %B \n%Y")
-
 feed_file = os.path.expanduser(FEED_FILE)
 
-def create_cover():
+os.environ['TZ'] = 'Europe/London'
+
+
+def create_cover(time):
+    now = datetime.now()
+    local_tz = get_localzone()
+    timereadable = now.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
     img = Image.new('RGB', (600, 800), color = (73, 109, 137))
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 35, encoding="unic")
-    d = ImageDraw.Draw(img)
-    d.text((50,50), f"News \n{readabletimewrapped}", font=font, fill=(255,255,0))
+    largefont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100, encoding="unic")
+    smallfont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 35, encoding="unic")
+    cover = ImageDraw.Draw(img)
+    cover.text((50,50), f"News", font=largefont, fill=(255,255,0))
+    cover.text((50,175), f"{timereadable}", font=smallfont, fill=(255,255,0))
     img.save(COVER_FILE)
+   
+
 
 def load_feeds():
     """Return a list of the feeds for download.
@@ -65,24 +82,7 @@ def load_feeds():
         return list(f)
 
 
-def update_start(now):
-    """
-    Update the timestamp of the feed file. The time stamp is used
-    as the starting point to download articles.
-    """
-    new_now = time.mktime(now.timetuple())
-    with open(feed_file, 'a'):
-        os.utime(feed_file, (new_now, new_now))
-
-
-def get_start(fname):
-    """
-    Get the starting time to read posts since. This is currently saved as 
-    the timestamp of the feeds file.
-    """
-    return pytz.utc.localize(datetime.fromtimestamp(os.path.getmtime(fname))) - timedelta(hours=FETCH_PERIOD)
-
-
+# Get all posts from the feeds
 def get_posts_list(feed_list, START):
     """
     Spawn a worker thread for each feed.
@@ -95,7 +95,12 @@ def get_posts_list(feed_list, START):
         lock.acquire()
         if blog not in posts:
             posts[blog] = []
+    
+        new_posts.reverse()
+
         posts[blog].extend(new_posts)
+        logging.info(f"Downloaded {len(new_posts)} posts from {blog}")
+        
         lock.release()
 
     for link in feed_list:
@@ -116,14 +121,15 @@ def get_posts_list(feed_list, START):
     return posts
 
 
+# 
 def nicedate(dt):
     return dt.strftime('%d %B %Y').strip('0')
 
-
+# 
 def nicehour(dt):
     return dt.strftime('%I:%M&thinsp;%p').strip('0').lower()
 
-
+# 
 def nicepost(post):
     thispost = post._asdict()
     thispost['nicedate'] = nicedate(thispost['time'])
@@ -133,8 +139,8 @@ def nicepost(post):
 
 # <link rel="stylesheet" type="text/css" href="style.css">
 
-html_head = f"""<html>
-<meta charset="UTF-8" />
+html_head = u"""<html>
+<meta charset="UF-8" />
 <meta name="viewport" content="width=device-width" />
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -142,7 +148,7 @@ html_head = f"""<html>
   <meta name="apple-mobile-web-app-capable" content="yes" />
 <style>
 </style>
-<title>NEWS: {readabletime}</title>
+<title>NEWS: {nowreadable}</title>
 </head>
 <body>
 
@@ -163,6 +169,7 @@ html_perpost = u"""
 """
 
 
+# Send email
 def send_mail(send_from, send_to, subject, text, files):
     # assert isinstance(send_to, list)
 
@@ -200,40 +207,52 @@ def convert_ebook(input_file, output_file):
     process.wait()
 
 
-def do_one_round():
+# Main function
+def build_document():
+
+    # Get the current time
+    now = datetime.now()
+    local_tz = get_localzone()
+    nowreadable = now.astimezone(local_tz).strftime("%H:%M%p on %A %d %B, %Y")
+    logging.info(f"Starting at {nowreadable}...")
     
-    now = pytz.utc.localize(datetime.now())
-    #midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Get the last time the feeds were pulled
+
+    # First check file exists
+    if not os.path.exists('/lastpulled.txt'):
+        lastpulledtime = now - timedelta(hours=6, minutes=0)
+    else:
+        with open('/lastpulled.txt', 'r') as file:
+            lastpulledtime = datetime.strptime(file.read(), "%d-%b-%Y (%H:%M:%S.%f)")
+
+    # If there is no last pulled time, set it to the current time
+    if lastpulledtime is None:
+        lastpulledtime = now - timedelta(hours=6, minutes=0)
+
     
     # Create cover image
-    create_cover();
+    create_cover(now);
     
-    # get all posts from starting point to now
-    start = get_start(feed_file)
-
-    logging.info(f"Collecting posts since {start}")
-    posts = get_posts_list(load_feeds(), start)
-    logging.info(f"Downloaded {len(posts)} feeds")
+    # Get all posts from last pulled time to now
+    lastpulledtimereadable = lastpulledtime.astimezone(local_tz).strftime("%H:%M%p on %A %d %B, %Y")
+    logging.info(f"Collecting posts since {lastpulledtimereadable}")
+    posts = get_posts_list(load_feeds(), lastpulledtime)
 
 
     if posts:
-        logging.info("Compiling newspaper")
+        logging.info("Compiling...")
 
-        result = html_head + \
+        result = html_head.format(nowreadable=nowreadable) + \
             u"\n".join([f"<br pagebreak=\"always\"><h1>{feed_url}</h1>" + \
                         u"\n".join([html_perpost.format(**nicepost(post)) for post in feed_posts])
                         for feed_url, feed_posts in posts.items()]) + html_tail
 
-        
-        '''result = html_head + \
-            u"\n".join([html_perpost.format(**nicepost(post))
-                        for post in posts]) + html_tail'''
-        
 
-        logging.info("Creating epub")
-        today_date = datetime.today().date()
-        epubFile = str(today_date)+'.epub'
-        mobiFile = str(today_date)+'.mobi'
+        logging.info("Creating ePub...")
+        documentname = now.astimezone(local_tz).strftime("%Y%m%d%H%M")
+        epubFile = str(documentname)+'.epub'
+        mobiFile = str(documentname)+'.mobi'
         os.environ['PYPANDOC_PANDOC'] = PANDOC
 
         pypandoc.convert_text(result,
@@ -245,47 +264,30 @@ def do_one_round():
                                           f"--epub-cover-image={COVER_FILE}",
                                           ])
         convert_ebook(epubFile, mobiFile)
-        epubFile_2 = str(today_date)+'_news.epub'
-        convert_ebook(mobiFile, epubFile_2)
+        epubFile_2 = str(documentname)+'_news.epub'
+        convert_ebook(mobiFile, epubFile)
 
         if not SEND_EMAIL:
             logging.info("Not sending email, as SEND_EMAIL is False")
         else:
-            logging.info("Sending to kindle email")
+            logging.info("Sending to kindle email...")
             send_mail(send_from=EMAIL_FROM,
                     send_to=[KINDLE_EMAIL],
-                    subject="Daily news - "+str(today_date),
+                    subject="News - " + nowreadable,
                     text="This is your daily news.\n\n--\n\n",
-                    files=[epubFile_2])
+                    files=[epubFile])
             logging.info("Cleaning up...")
             os.remove(epubFile)
             os.remove(mobiFile)
 
-    logging.info("Finished.")
-    update_start(now)
+    logging.info("Finished!")
+    logging.info("**************************")
+    
+    # Set the last pulled time to the current time
+    with open('/lastpulled.txt', 'w') as file:
+        file.write(now.strftime("%d-%b-%Y (%H:%M:%S.%f)"))
 
 
-def get_next_run_time():
-    tz = get_localzone()
-    timezone = pytz.timezone(tz.key)
-    now = datetime.now(tz=timezone)
-    
-    # Calculate the next run time
-    next_run_time = None
-    for hour, minute in RUN_TIMES:
-        run_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        if now < run_time:
-            next_run_time = run_time
-            break
-    
-    # If no future run time is found for today, take the first run time of the next day
-    if next_run_time is None:
-        next_run_time = now.replace(hour=RUN_TIMES[0][0], minute=RUN_TIMES[0][1], second=0, microsecond=0) + timedelta(days=1)
-    
-    return (next_run_time - now).total_seconds()
-
+# Main loop
 if __name__ == '__main__':
-    while True:
-        do_one_round()
-        seconds = get_next_run_time()
-        time.sleep(seconds)
+    build_document()
