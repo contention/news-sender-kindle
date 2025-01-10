@@ -15,6 +15,21 @@ def createhtml():
     file.write("<html>")
     file.write("<head>")
     file.write("<title>The Guardian</title>")
+
+    # Write the CSS
+    file.write("<style>")
+    file.write("body {font-family: Arial, sans-serif;}")
+    file.write("h1 {font-size: 2em; page-break-before:always}")
+    file.write("h2 {font-size: 1.5em;}")
+    file.write("h3 {font-size: 1.2em;}")
+    file.write("hr {border: 1px solid #ddd;}")
+    file.write(".toc-title {font-size: 1.5em; font-weight: bold;}")
+    file.write(".toc-section {font-size: 1.2em; font-weight: bold; margin-left: 20px;}")
+    file.write(".toc-item {margin-left: 40px;}")
+
+    file.write("</style>")
+
+    # Write the rest of the opening tags
     file.write("</head>")
     file.write("<body>")
 
@@ -28,9 +43,8 @@ def createhtml():
     for source in sources:
         title = source["title"]
 
-        toc_string += "<li>"+str(title)+"</li>"
+        toc_string += "<div class='toc-title'><a href='#"+str(title)+"'>"+str(title)+"</a></div>"
         content_string += "<h1 id='"+str(title)+"'>"+ str(title)+"</h1>"
-
         for section in source["sections"]:
             section_id = section["id"]
             section_title = section["title"]
@@ -43,24 +57,23 @@ def createhtml():
                 data = json.load(url)
 
             if data["response"]["status"] == "ok":
-                toc_string += "<li><a href='#"+str(section_title)+"'>"+str(section_title)+"</a></li>"
-                content_string += "<h2>"+ str(section_title)+"</h2>"
+                toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
+                content_string += "<h2 id='"+str(section_id)+"'>"+ str(section_title)+"</h2>"
                 for article in data["response"]["results"]:
 
-                    toc_string += "<li><a href='#"+article["id"]+"'>"+str(article["fields"]["headline"])+"</a></li>"
+                    toc_string += "<div class='toc-item'><a href='#"+article["id"]+"'>"+str(article["fields"]["headline"])+"</a></div>"
                     
+                    content_string += "<div><a href='#contents'>Back to contents</a></div>"
                     content_string += "<h3 id='"+article["id"]+"'>"+ str(article["fields"]["headline"])+"</h3>"
-                    content_string +=  str(article["fields"]["body"])
+                    content_string += str(article["fields"]["body"]) + "<hr />"
             else:
                 content_string += "<h3>Error fetching the '"+section_title+"' section!</h3>"
 
             time.sleep(1)
 
     # Write the Table of Contents
-    file.write("<h1>Table of Contents</h1>")
-    file.write("<ul>")
+    file.write("<h1 id='contents'>Contents</h1>")
     file.write(toc_string)
-    file.write("</ul>")
     
     # Write the content
     file.write(content_string)
