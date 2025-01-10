@@ -1,3 +1,54 @@
+#Using Guardian API
+
+`https://content.guardianapis.com/search?section=[SECTION]&type=article&show-fields=all&show-blocks=body&page-size=25&shouldHideAdverts=true&api-key=[API_KEY]`
+
+## Process
+Loop through all endpoints and build HTML document.
+
+
+## Which sections?
+
+**News**
+ - uk-news
+ - us-news
+ - world
+ - society
+
+**Opinion**
+ - commentisfree
+
+**Culture**
+ - film
+ - music
+ - books
+ - games
+ - artanddesign
+ - tv-and-radio
+ 
+**Lifestyle**
+- food
+- travel
+- thefilter
+- lifeandstyle
+- money
+
+**Environment**
+- environment
+
+**Science and tech**
+- science
+- technology
+
+**Sport**
+- football
+
+**Global development**
+- global-development
+
+
+
+
+----
 # Forked Instructions
 
 ## Environment variables
