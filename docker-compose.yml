@@ -2,36 +2,13 @@ name: News Sender Kindle
 
 services:
 
-  development:
-    build:
-      context: .
-    networks:
-      - network1
+  app:
+    image: python:3.10-slim
     volumes:
-      - type: bind
-        source: config
-        target: /config
-      - type: bind
-        source: app
-        target: /app
-      - type: bind
-        source: morss.py
-        target: /usr/local/lib/python3.8/site-packages/morss/morss.py
-    environment:
-      EMAIL_SMTP: ${EMAIL_SMTP}
-      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT}
-      EMAIL_USER: ${EMAIL_USER}
-      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
-      EMAIL_FROM: ${EMAIL_FROM}
-      KINDLE_EMAIL: ${KINDLE_EMAIL}
-      UPDATE_PERIOD: ${UPDATE_PERIOD}
-      FETCH_PERIOD: ${FETCH_PERIOD}
-      ITEM: ${ITEM}
-      ENCRYPTION: ${ENCRYPTION}
-    restart: always
+    - type: bind
+      source: app
+      target: /app
+    command: python3 /app/createhtml.py
+    restart: unless-stopped
 
-networks:
-  network1:
-    name: ${NETWORK}
-    external: true
 
