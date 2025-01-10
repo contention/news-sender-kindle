@@ -1,6 +1,3 @@
-
-
-
 from email.utils import COMMASPACE, formatdate
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -13,10 +10,12 @@ import json
 import smtplib
 import sys
 import pypandoc
+import pytz
 import time
 import logging
 import threading
 import subprocess
+from tzlocal import get_localzone
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -24,7 +23,7 @@ ENCRYPTION = os.getenv("ENCRYPTION")
 EMAIL_SMTP = os.getenv("EMAIL_SMTP")
 EMAIL_SMTP_PORT = int(os.getenv("EMAIL_SMTP_PORT"))
 EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASSWD = os.getenv("EMAIL_PASSWORD")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_FROM = os.getenv("EMAIL_FROM")
 KINDLE_EMAIL = os.getenv("KINDLE_EMAIL")
 PANDOC = os.getenv("PANDOC_PATH", "/usr/bin/pandoc")
@@ -33,19 +32,18 @@ OUTPUT_DIRECTORY = "/output/"
 HTML_FILE_NAME="theguardian.html"
 COVER_FILE_NAME="cover.jpg"
 EPUB_FILE_NAME="theguardian.epub"
+MOBI_FILE_NAME="theguardian.mobi"
 
 
 # Function to create a cover image
-def create_cover(time):
-    now = datetime.now()
+def create_cover():
+    now = datetime.datetime.now()
     local_tz = get_localzone()
     timereadable = now.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
     img = Image.new('RGB', (600, 800), color = (73, 109, 137))
-    largefont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100, encoding="unic")
-    smallfont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 35, encoding="unic")
     cover = ImageDraw.Draw(img)
-    cover.text((50,50), f"News", font=largefont, fill=(255,255,0))
-    cover.text((50,175), f"{timereadable}", font=smallfont, fill=(255,255,0))
+    cover.text((50,50), f"News", fill=(255,255,0))
+    cover.text((50,175), f"{timereadable}", fill=(255,255,0))
     img.save(str(OUTPUT_DIRECTORY) + str(COVER_FILE_NAME))
 
 
@@ -76,9 +74,16 @@ def send_mail(send_from, send_to, subject, text, files):
     else:
         sys.exit("ENCRYPTION TYPE NOT FOUND !")
 
-    smtp.login(EMAIL_USER, EMAIL_PASSWD)
+    smtp.login(EMAIL_USER, EMAIL_PASSWORD)
     smtp.sendmail(send_from, send_to, msg.as_string())
     smtp.quit()
+
+
+# Function to convert an ebook
+def convert_ebook(input_file, output_file):
+    cmd = ['ebook-convert', input_file, output_file]
+    process = subprocess.Popen(cmd)
+    process.wait()
 
 
 # Function to create an HTML file
@@ -181,8 +186,8 @@ def createhtml():
             time.sleep(1)
 
     # Write the Table of Contents
-    file.write("<h1 id='contents'>Contents</h1>")
-    file.write(toc_string)
+    # file.write("<h1 id='contents'>Contents</h1>")
+    # file.write(toc_string)
     
     # Write the content
     file.write(content_string)
@@ -196,13 +201,33 @@ def createhtml():
 
     print("HTML file successfully written.")
 
+    # Create the cover image
+    create_cover()
+
     pypandoc.convert_file(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), to='epub3',
                               format="html",
                               outputfile=f"{str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME}",
                               extra_args=["--standalone",
                                             f"--toc",
-                                          #f"--epub-cover-image={str(OUTPUT_DIRECTORY) + COVER_FILE_NAME}",
+                                          f"--epub-cover-image={str(OUTPUT_DIRECTORY) + COVER_FILE_NAME}",
                                           ])
+    # Convert the epub to mobi and back to epub
+
+    convert_ebook(str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME, str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME)
+    
+    convert_ebook(str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
+
+
+
+    logging.info("Sending to kindle email...")
+    send_mail(send_from=EMAIL_FROM,
+            send_to=[KINDLE_EMAIL],
+            subject="News - ",
+            text="This is your daily news.\n\n--\n\n",
+            files=[str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME])
+    logging.info("Cleaning up...")
+    #os.remove(epubFile)
+    #os.remove(mobiFile)
 
         
 

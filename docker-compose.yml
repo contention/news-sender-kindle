@@ -11,7 +11,7 @@ services:
       - EMAIL_SMTP=${EMAIL_SMTP}
       - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT}
       - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASSWD=${EMAIL_PASSWD}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_FROM=${EMAIL_FROM}
       - KINDLE_EMAIL=${KINDLE_EMAIL}
     volumes:
@@ -21,7 +21,7 @@ services:
     - type: bind
       source: ${OUTPUT_DIRECTORY}
       target: /output
-    command: python3 /app/createhtml.py
+    #command: python3 /app/createhtml.py
     restart: no
 
 
