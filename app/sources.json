@@ -1,0 +1,32 @@
+[
+    {
+        "title": "News",
+        "sections":[
+            {
+                "title": "UK News",
+                "id":"uk-news"
+            },
+            {
+                "title": "US News",
+                "id":"us-news"
+            },
+            {
+                "title": "World News",
+                "id":"world"
+            },
+            {
+                "title": "Society",
+                "id":"society"
+            }
+        ]
+    },
+    {
+        "title": "Opinion",
+        "sections":[
+            {
+                "title": "Comment Is Free",
+                "id":"commentisfree"
+            }
+        ]
+    }
+]
