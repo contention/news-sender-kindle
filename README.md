@@ -1,4 +1,4 @@
-#Using Guardian API
+# Using Guardian API
 
 `https://content.guardianapis.com/search?section=[SECTION]&type=article&show-fields=all&show-blocks=body&page-size=25&shouldHideAdverts=true&api-key=[API_KEY]`
 
