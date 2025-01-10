@@ -1,16 +1,91 @@
+
+
+
+from email.utils import COMMASPACE, formatdate
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 import os
 import time
 import datetime
 import urllib.request
 import json
+import smtplib
+import sys
+import pypandoc
+import time
+import logging
+import threading
+import subprocess
+from PIL import Image, ImageDraw, ImageFont
 
-FILENAME="TheGuardian.html"
+
+ENCRYPTION = os.getenv("ENCRYPTION")
+EMAIL_SMTP = os.getenv("EMAIL_SMTP")
+EMAIL_SMTP_PORT = int(os.getenv("EMAIL_SMTP_PORT"))
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASSWD = os.getenv("EMAIL_PASSWORD")
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+KINDLE_EMAIL = os.getenv("KINDLE_EMAIL")
+PANDOC = os.getenv("PANDOC_PATH", "/usr/bin/pandoc")
+
+OUTPUT_DIRECTORY = "/output/"
+HTML_FILE_NAME="theguardian.html"
+COVER_FILE_NAME="cover.jpg"
+EPUB_FILE_NAME="theguardian.epub"
+
+
+# Function to create a cover image
+def create_cover(time):
+    now = datetime.now()
+    local_tz = get_localzone()
+    timereadable = now.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
+    img = Image.new('RGB', (600, 800), color = (73, 109, 137))
+    largefont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100, encoding="unic")
+    smallfont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 35, encoding="unic")
+    cover = ImageDraw.Draw(img)
+    cover.text((50,50), f"News", font=largefont, fill=(255,255,0))
+    cover.text((50,175), f"{timereadable}", font=smallfont, fill=(255,255,0))
+    img.save(str(OUTPUT_DIRECTORY) + str(COVER_FILE_NAME))
+
+
+# Send email
+def send_mail(send_from, send_to, subject, text, files):
+    # assert isinstance(send_to, list)
+
+    msg = MIMEMultipart()
+    msg['From'] = send_from
+    msg['To'] = COMMASPACE.join(send_to)
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = subject
+    msg.attach(MIMEText(text, 'text', 'utf-8'))
+
+    for f in files or []:
+        with open(f, "rb") as fil:
+            msg.attach(MIMEApplication(
+                fil.read(),
+                Content_Disposition=f'attachment; filename="{os.path.basename(f)}"',
+                Name=os.path.basename(f)
+            ))
+    if ENCRYPTION == "SSL":
+        smtp = smtplib.SMTP_SSL(EMAIL_SMTP, EMAIL_SMTP_PORT)
+    elif ENCRYPTION == "TLS":
+        smtp = smtplib.SMTP(EMAIL_SMTP, EMAIL_SMTP_PORT)
+        smtp.ehlo()
+        smtp.starttls()
+    else:
+        sys.exit("ENCRYPTION TYPE NOT FOUND !")
+
+    smtp.login(EMAIL_USER, EMAIL_PASSWD)
+    smtp.sendmail(send_from, send_to, msg.as_string())
+    smtp.quit()
+
 
 # Function to create an HTML file
 def createhtml():
 
     # Open a file
-    file = open("/output/" + str(FILENAME), "w")
+    file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
 
     # Write the opening HTML tags
     file.write("<html>")
@@ -42,7 +117,7 @@ def createhtml():
     content_string = ""
 
 
-    with open('app/sources.json') as fp:
+    with open('sources.json') as fp:
         sources = json.load(fp)
 
     # Loop through the sources
@@ -120,6 +195,15 @@ def createhtml():
     file.close()
 
     print("HTML file successfully written.")
+
+    pypandoc.convert_file(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), to='epub3',
+                              format="html",
+                              outputfile=f"{str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME}",
+                              extra_args=["--standalone",
+                                            f"--toc",
+                                          #f"--epub-cover-image={str(OUTPUT_DIRECTORY) + COVER_FILE_NAME}",
+                                          ])
+
         
 
 if __name__ == '__main__':

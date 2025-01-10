@@ -3,10 +3,17 @@ name: News Sender Kindle
 services:
 
   app:
-    image: python:3.10-slim
+    build: .
     environment:
       - PYTHONUNBUFFERED=1
       - GUARDIAN_API_KEY=${GUARDIAN_API_KEY}
+      - ENCRYPTION=${ENCRYPTION}
+      - EMAIL_SMTP=${EMAIL_SMTP}
+      - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASSWD=${EMAIL_PASSWD}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - KINDLE_EMAIL=${KINDLE_EMAIL}
     volumes:
     - type: bind
       source: app
