@@ -9,6 +9,6 @@ services:
       source: app
       target: /app
     command: python3 /app/createhtml.py
-    restart: unless-stopped
+    restart: no
 
 

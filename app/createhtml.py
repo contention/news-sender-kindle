@@ -1,28 +1,29 @@
-from typing import List
-from xml.dom.minidom import getDOMImplementation, Document
+import urllib.request, json
+
+def createhtml():
 
 
-def getDOM() -> Document:
-    impl = getDOMImplementation()
-    dt = impl.createDocumentType(
-        "html",
-        "-//W3C//DTD XHTML 1.0 Strict//EN",
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd",
-    )
-    return impl.createDocument("http://www.w3.org/1999/xhtml", "html", dt)
+    with urllib.request.urlopen("http://maps.googleapis.com/maps/api/geocode/json?address=google") as url:
+        data = json.load(url)
+        print(data)
 
+    file = open("output.html", "w")
 
-def ul(items: List[str]) -> str:
-    dom = getDOM()
-    html = dom.documentElement
-    ul = dom.createElement("ul")
-    for item in items:
-        li = dom.createElement("li")
-        li.appendChild(dom.createTextNode(item))
-        ul.appendChild(li)
-    html.appendChild(ul)
-    return dom.toxml()
+    # Write HTML content
+    file.write("<html>")
+    file.write("<head>")
+    file.write("<title>My Webpage</title>")
+    file.write("</head>")
+    file.write("<body>")
+    file.write("<h1>Welcome to my webpage!</h1>")
+    file.write("</body>")
+    file.write("</html>")
 
+    # Close the file
+    file.close()
 
-if __name__ == "__main__":
-    print(ul(["first item", "second item", "third item"]))
+    print("HTML file successfully written.")
+        
+
+if __name__ == '__main__':
+    createhtml()
