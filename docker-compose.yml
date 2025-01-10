@@ -4,10 +4,16 @@ services:
 
   app:
     image: python:3.10-slim
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GUARDIAN_API_KEY=${GUARDIAN_API_KEY}
     volumes:
     - type: bind
       source: app
       target: /app
+    - type: bind
+      source: ${OUTPUT_DIRECTORY}
+      target: /output
     command: python3 /app/createhtml.py
     restart: no
 
