@@ -5,18 +5,6 @@
             {
                 "title": "UK News",
                 "id":"uk-news"
-            },
-            {
-                "title": "US News",
-                "id":"us-news"
-            },
-            {
-                "title": "World News",
-                "id":"world"
-            },
-            {
-                "title": "Society",
-                "id":"society"
             }
         ]
     },
@@ -26,100 +14,6 @@
             {
                 "title": "Comment Is Free",
                 "id":"commentisfree"
-            }
-        ]
-    },
-    {
-        "title": "Culture",
-        "sections":[
-            {
-                "title": "Film",
-                "id":"film"
-            },
-            {
-                "title": "Music",
-                "id":"music"
-            },
-            {
-                "title": "Books",
-                "id":"books"
-            },
-            {
-                "title": "Games",
-                "id":"games"
-            },
-            {
-                "title": "Art and Design",
-                "id":"artanddesign"
-            },
-            {
-                "title": "TV & Radio",
-                "id":"tv-and-radio"
-            }
-        ]
-    },
-    {
-        "title": "Lifestyle",
-        "sections":[
-            {
-                "title": "Food",
-                "id":"food"
-            },
-            {
-                "title": "Travel",
-                "id":"travel"
-            },
-            {
-                "title": "The Filter",
-                "id":"thefilter"
-            },
-            {
-                "title": "Life and Style",
-                "id":"lifeandstyle"
-            },
-            {
-                "title": "Money",
-                "id":"money"
-            }
-        ]
-    },
-    {
-        "title": "Environment",
-        "sections":[
-            {
-                "title": "Environment",
-                "id":"environment"
-            }
-        ]
-    },
-    {
-        "title": "Sciene and Tech",
-        "sections":[
-            {
-                "title": "Science",
-                "id":"science"
-            },
-            {
-                "title": "Tech",
-                "id":"tech"
-            }
-        ]
-    },
-    {
-        "title": "Sport",
-        "sections":[
-            {
-                "title": "Football",
-                "id":"football"
-            }
-        ]
-    },
-    {
-        "title": "Global Development",
-        "sections":[
-            {
-                "title": "Global Development",
-                "id":"global-development"
             }
         ]
     }

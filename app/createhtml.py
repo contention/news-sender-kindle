@@ -9,12 +9,12 @@ import urllib.request
 import json
 import smtplib
 import sys
-import pypandoc
 import pytz
 import time
 import logging
 import threading
 import subprocess
+import re
 from tzlocal import get_localzone
 from PIL import Image, ImageDraw, ImageFont
 
@@ -81,7 +81,7 @@ def send_mail(send_from, send_to, subject, text, files):
 
 # Function to convert an ebook
 def convert_ebook(input_file, output_file):
-    cmd = ['ebook-convert', input_file, output_file]
+    cmd = ['ebook-convert', input_file, output_file, "--use-auto-toc"]
     process = subprocess.Popen(cmd)
     process.wait()
 
@@ -89,12 +89,16 @@ def convert_ebook(input_file, output_file):
 # Function to create an HTML file
 def createhtml():
 
+    partcounter = 1
+
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
 
     # Write the opening HTML tags
+    file.write("<!DOCTYPE html>")
     file.write("<html>")
     file.write("<head>")
+    file.write("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />")
     file.write("<title>The Guardian</title>")
 
     # Write the CSS
@@ -104,7 +108,7 @@ def createhtml():
     file.write("a {color: #000000; text-decoration: none; border-bottom: 1px dotted #666666;}")
 
     file.write("h1 {font-size: 2em; page-break-before:always}")
-    file.write("h2 {font-size: 1.5em;}")
+    file.write("h2 {font-size: 1.5em; page-break-before:always}")
     file.write("h3 {font-size: 1.2em;}")
     file.write("hr {border: 1px solid #ddd;}")
     file.write(".toc-title {font-size: 1.5em; font-weight: bold; margin: 0 0 10px 0;}")
@@ -133,7 +137,8 @@ def createhtml():
         toc_string += "<div class='toc-title'><a href='#"+str(title)+"'>"+str(title)+"</a></div>"
 
         # Write the source title content
-        content_string += "<h1 id='"+str(title)+"'>"+ str(title)+"</h1>"
+        content_string += "<h1>Part " + str(partcounter) + ": " + str(title)+"</h1>"
+        partcounter += 1
 
         # Loop through the sections
         for section in source["sections"]:
@@ -157,7 +162,7 @@ def createhtml():
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
 
                 # Write the section title content
-                content_string += "<h2 id='"+str(section_id)+"'>"+ str(section_title)+"</h2>"
+                content_string += "<h1>Part " + str(section_title)+"</h1>"
 
                 # Loop through the articles
                 for article in data["response"]["results"]:
@@ -171,12 +176,17 @@ def createhtml():
                     toc_string += "<div class='toc-item'><a href='#"+article["id"]+"'>"+str(article["fields"]["headline"])+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
                     
                     # Add a link back to the contents
-                    content_string += "<div><a href='#contents'>Back to contents</a></div>"
+                    #content_string += "<div><a href='#contents'>Back to contents</a></div>"
                     
                     # Write the article content
-                    content_string += "<h3 id='"+article["id"]+"'>"+ str(article["fields"]["headline"])+"</h3>"
+                    content_string += "<h2 class='chapter'>" + str(article["fields"]["headline"])+"</h2>"
                     content_string += "<p><small>"+str(formattedarticledate)+"</small></p>"
-                    content_string += str(article["fields"]["body"]) + "<hr />"
+
+                    # Process the body text
+                    bodytext = str(article["fields"]["body"]).replace("h1", "h3")
+                    bodytext = bodytext.replace("h2", "h3")
+                    bodytext = re.sub(r"<(?:a\b[^>]*>|/a>)", "", bodytext)
+                    content_string += bodytext + "<hr />"
 
             else:
                 # Write an error message
@@ -186,8 +196,8 @@ def createhtml():
             time.sleep(1)
 
     # Write the Table of Contents
-    file.write("<h1 id='contents'>Contents</h1>")
-    file.write(toc_string)
+    #file.write("<h1 id='contents'>Contents</h1>")
+    #file.write(toc_string)
     
     # Write the content
     file.write(content_string)
