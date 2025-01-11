@@ -186,8 +186,8 @@ def createhtml():
             time.sleep(1)
 
     # Write the Table of Contents
-    # file.write("<h1 id='contents'>Contents</h1>")
-    # file.write(toc_string)
+    file.write("<h1 id='contents'>Contents</h1>")
+    file.write(toc_string)
     
     # Write the content
     file.write(content_string)
@@ -204,32 +204,36 @@ def createhtml():
     # Create the cover image
     create_cover()
 
-    pypandoc.convert_file(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), to='epub3',
-                              format="html",
-                              outputfile=f"{str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME}",
-                              extra_args=["--standalone",
-                                            f"--toc",
-                                          f"--epub-cover-image={str(OUTPUT_DIRECTORY) + COVER_FILE_NAME}",
-                                          ])
-    # Convert the epub to mobi and back to epub
 
-    convert_ebook(str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME, str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME)
+    #pypandoc.convert_file(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), to='epub3',
+    #    format="html",
+    #    outputfile=f"{str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME}",
+    #    extra_args=[
+    #        "--standalone",
+    #        f"--epub-cover-image={str(OUTPUT_DIRECTORY) + COVER_FILE_NAME}",
+     #       ])
     
-    convert_ebook(str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
+    # Convert the html to epub
+    convert_ebook(str(OUTPUT_DIRECTORY) + HTML_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
+
+    # Convert the epub to mobi and back to epub
+    #convert_ebook(str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME, str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME)
+    #convert_ebook(str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
 
 
+    if os.getenv("SEND_EMAIL") == "True":
+        logging.info("Sending to kindle email...")
+        send_mail(send_from=EMAIL_FROM,
+                send_to=[KINDLE_EMAIL],
+                subject="News - ",
+                text="This is your daily news.\n\n--\n\n",
+                files=[str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME])
+        logging.info("Cleaning up...")
+        #os.remove(epubFile)
+        #os.remove(mobiFile)
+    else:
+        logging.info("Email sending is disabled. Skipping...")
 
-    logging.info("Sending to kindle email...")
-    send_mail(send_from=EMAIL_FROM,
-            send_to=[KINDLE_EMAIL],
-            subject="News - ",
-            text="This is your daily news.\n\n--\n\n",
-            files=[str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME])
-    logging.info("Cleaning up...")
-    #os.remove(epubFile)
-    #os.remove(mobiFile)
-
-        
 
 if __name__ == '__main__':
     createhtml()
