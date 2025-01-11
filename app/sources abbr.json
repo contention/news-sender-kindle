@@ -1,0 +1,23 @@
+[
+    {
+        "title": "News",
+        "id":"news",
+    
+        "sections":[
+            {
+                "title": "UK News",
+                "id":"uk-news"
+            }
+        ]
+    },
+    {
+        "title": "Opinion",
+        "id":"opinion",
+        "sections":[
+            {
+                "title": "Comment Is Free",
+                "id":"commentisfree"
+            }
+        ]
+    }
+]

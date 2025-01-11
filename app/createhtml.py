@@ -130,18 +130,18 @@ def createhtml():
         sources = json.load(fp)
 
     # Loop through the sources
-    for source in sources:
-        title = source["title"]
+    for part in sources:
+        part_title = part["title"]
+        part_id = part["id"]
 
-        # Write the source title toc
-        toc_string += "<div class='toc-title'><a href='#"+str(title)+"'>"+str(title)+"</a></div>"
+        # Write the part title for the toc
+        toc_string += "<div class='toc-title'><a href='#"+str(part_id)+"'>"+str(part_title)+"</a></div>"
 
         # Write the source title content
-        content_string += "<h1>Part " + str(partcounter) + ": " + str(title)+"</h1>"
-        partcounter += 1
+        content_string += "<h1 class='chapter' id=" + str(part_id) + ">" + str(part_title)+"</h1>"
 
         # Loop through the sections
-        for section in source["sections"]:
+        for section in part["sections"]:
             section_id = section["id"]
             section_title = section["title"]
 
@@ -162,7 +162,8 @@ def createhtml():
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
 
                 # Write the section title content
-                content_string += "<h1>Part " + str(section_title)+"</h1>"
+                content_string += "<h1 class='chapter' id='"+str(section_id)+"'>" + str(part_title)+ "/" + str(section_title) + "</h1>"
+
 
                 # Loop through the articles
                 for article in data["response"]["results"]:
@@ -173,13 +174,13 @@ def createhtml():
 
                     
                     # Write the article toc
-                    toc_string += "<div class='toc-item'><a href='#"+article["id"]+"'>"+str(article["fields"]["headline"])+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
+                    toc_string += "<div class='toc-item'><a href='#"+str(article["id"])+"'>"+str(article["fields"]["headline"])+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
                     
                     # Add a link back to the contents
-                    #content_string += "<div><a href='#contents'>Back to contents</a></div>"
+                    content_string += "<div><small><a href='#contents'>Back to contents</a></small></div>"
                     
                     # Write the article content
-                    content_string += "<h2 class='chapter'>" + str(article["fields"]["headline"])+"</h2>"
+                    content_string += "<h2 id='"+str(article["id"])+"'>" + str(article["fields"]["headline"])+"</h2>"
                     content_string += "<p><small>"+str(formattedarticledate)+"</small></p>"
 
                     # Process the body text
@@ -196,8 +197,8 @@ def createhtml():
             time.sleep(1)
 
     # Write the Table of Contents
-    #file.write("<h1 id='contents'>Contents</h1>")
-    #file.write(toc_string)
+    file.write("<h1 class='chapter' id='contents'>Contents</h1>")
+    file.write(toc_string)
     
     # Write the content
     file.write(content_string)
