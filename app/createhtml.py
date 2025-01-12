@@ -1,3 +1,15 @@
+#TO DO
+# - Improve cover image with image and date/time
+# - Better error handling/logging
+# - Better commenting
+# - Better content styling
+# - Images in articles?
+# - Better README documentation
+# - Better environment management
+# - Enable self-containment - no need to mount a volume/build files in the container itself
+# - Remove chapter keywords from article titles
+
+
 from email.utils import COMMASPACE, formatdate
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -89,8 +101,6 @@ def convert_ebook(input_file, output_file):
 # Function to create an HTML file
 def createhtml():
 
-    partcounter = 1
-
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
 
@@ -111,9 +121,8 @@ def createhtml():
     file.write("h2 {font-size: 1.5em; page-break-before:always}")
     file.write("h3 {font-size: 1.2em;}")
     file.write("hr {border: 1px solid #ddd;}")
-    file.write(".toc-title {font-size: 1.5em; font-weight: bold; margin: 0 0 10px 0;}")
-    file.write(".toc-section {font-size: 1.2em; font-weight: bold; margin: 0 0 10px 20px;}")
-    file.write(".toc-item {margin: 0 0 10px 40px;}")
+    file.write(".toc-section {font-size: 1.5em; font-weight: bold; margin: 0 0 10px 0;}")
+    file.write(".toc-item {margin: 0 0 10px 20px;}")
     file.write(".toc-trailtext {color: #666666; padding-top: 5px; font-style: italic;}")
 
     file.write("</style>")
@@ -126,22 +135,11 @@ def createhtml():
     content_string = ""
 
 
-    with open('sources.json') as fp:
-        sources = json.load(fp)
-
-    # Loop through the sources
-    for part in sources:
-        part_title = part["title"]
-        part_id = part["id"]
-
-        # Write the part title for the toc
-        toc_string += "<div class='toc-title'><a href='#"+str(part_id)+"'>"+str(part_title)+"</a></div>"
-
-        # Write the source title content
-        content_string += "<h1 class='chapter' id=" + str(part_id) + ">" + str(part_title)+"</h1>"
+    with open('sections.json') as fp:
+        sections = json.load(fp)
 
         # Loop through the sections
-        for section in part["sections"]:
+        for section in sections:
             section_id = section["id"]
             section_title = section["title"]
 
@@ -162,22 +160,27 @@ def createhtml():
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
 
                 # Write the section title content
-                content_string += "<h1 class='chapter' id='"+str(section_id)+"'>" + str(part_title)+ "/" + str(section_title) + "</h1>"
+                content_string += "<h1 class='chapter' id='"+str(section_id)+"'>" + str(section_title) + "</h1>"
 
 
-                # Loop through the articles
+                # Loop through and build section contents
                 for article in data["response"]["results"]:
 
                     # Format the date into something human readable
+                    # TO DO - this is repeated below, can we refactor?
                     articledate = datetime.datetime.strptime(article["webPublicationDate"], "%Y-%m-%dT%H:%M:%SZ")
                     formattedarticledate = articledate.strftime("%H:%M %A %d %B %Y")
 
-                    
-                    # Write the article toc
-                    toc_string += "<div class='toc-item'><a href='#"+str(article["id"])+"'>"+str(article["fields"]["headline"])+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
-                    
-                    # Add a link back to the contents
-                    content_string += "<div><small><a href='#contents'>Back to contents</a></small></div>"
+                    content_string += "<div class='toc-item'><a href='#"+str(article["id"])+"'>"+str(article["fields"]["headline"])+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
+
+
+                # Loop through and add the individual article text
+                for article in data["response"]["results"]:
+
+                    # Format the date into something human readable
+                    # TO DO - this is repeated above, can we refactor?
+                    articledate = datetime.datetime.strptime(article["webPublicationDate"], "%Y-%m-%dT%H:%M:%SZ")
+                    formattedarticledate = articledate.strftime("%H:%M %A %d %B %Y")
                     
                     # Write the article content
                     content_string += "<h2 id='"+str(article["id"])+"'>" + str(article["fields"]["headline"])+"</h2>"
@@ -187,7 +190,13 @@ def createhtml():
                     bodytext = str(article["fields"]["body"]).replace("h1", "h3")
                     bodytext = bodytext.replace("h2", "h3")
                     bodytext = re.sub(r"<(?:a\b[^>]*>|/a>)", "", bodytext)
-                    content_string += bodytext + "<hr />"
+                    content_string += bodytext
+
+                    # Add a link back to the contents
+                    content_string += "<div><small><a href='#"+str(section_id)+"'>Section home</a></small></div>"
+
+                    # Add a horizontal line to signify the end of the article
+                    content_string += "<hr />"
 
             else:
                 # Write an error message
@@ -214,22 +223,9 @@ def createhtml():
 
     # Create the cover image
     create_cover()
-
-
-    #pypandoc.convert_file(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), to='epub3',
-    #    format="html",
-    #    outputfile=f"{str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME}",
-    #    extra_args=[
-    #        "--standalone",
-    #        f"--epub-cover-image={str(OUTPUT_DIRECTORY) + COVER_FILE_NAME}",
-     #       ])
     
     # Convert the html to epub
     convert_ebook(str(OUTPUT_DIRECTORY) + HTML_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
-
-    # Convert the epub to mobi and back to epub
-    #convert_ebook(str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME, str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME)
-    #convert_ebook(str(OUTPUT_DIRECTORY) + MOBI_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
 
 
     if os.getenv("SEND_EMAIL") == "True":
