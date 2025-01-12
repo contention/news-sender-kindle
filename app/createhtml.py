@@ -171,7 +171,25 @@ def createhtml():
                     articledate = datetime.datetime.strptime(article["webPublicationDate"], "%Y-%m-%dT%H:%M:%SZ")
                     formattedarticledate = articledate.strftime("%H:%M %A %d %B %Y")
 
-                    content_string += "<div class='toc-item'><a href='#"+str(article["id"])+"'>"+str(article["fields"]["headline"])+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
+                    # Process the header
+                    article_header = str(article["fields"]["headline"])
+                    article_header = article_header.replace("chapter", "ch@pter")
+                    article_header = article_header.replace("book", "b00k")
+                    article_header = article_header.replace("section", "sect1on")
+                    article_header = article_header.replace("prologue", "pr0logue")
+                    article_header = article_header.replace("epilogue", "ep1logue")
+                    article_header = article_header.replace("part", "p@rt")
+
+                    # Process the ID
+                    article_id = str(article["id"])
+                    article_id = article_id.replace("chapter", "ch@pter")
+                    article_id = article_id.replace("book", "b00k")
+                    article_id = article_id.replace("section", "sect1on")
+                    article_id = article_id.replace("prologue", "pr0logue")
+                    article_id = article_id.replace("epilogue", "ep1logue")
+                    article_id = article_id.replace("part", "p@rt")
+
+                    content_string += "<div class='toc-item'><a href='#"+article_id+"'>"+article_header+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
 
 
                 # Loop through and add the individual article text
@@ -183,7 +201,28 @@ def createhtml():
                     formattedarticledate = articledate.strftime("%H:%M %A %d %B %Y")
                     
                     # Write the article content
-                    content_string += "<h2 id='"+str(article["id"])+"'>" + str(article["fields"]["headline"])+"</h2>"
+
+                    # Process the header
+                    article_header = str(article["fields"]["headline"])
+                    article_header = article_header.replace("chapter", "ch@pter")
+                    article_header = article_header.replace("book", "b00k")
+                    article_header = article_header.replace("section", "sect1on")
+                    article_header = article_header.replace("prologue", "pr0logue")
+                    article_header = article_header.replace("epilogue", "ep1logue")
+                    article_header = article_header.replace("part", "p@rt")
+
+                    # Process the ID
+                    article_id = str(article["id"])
+                    article_id = article_id.replace("chapter", "ch@pter")
+                    article_id = article_id.replace("book", "b00k")
+                    article_id = article_id.replace("section", "sect1on")
+                    article_id = article_id.replace("prologue", "pr0logue")
+                    article_id = article_id.replace("epilogue", "ep1logue")
+                    article_id = article_id.replace("part", "p@rt")
+
+                    content_string += "<h2 id='"+article_id+"'>" + article_header +"</h2>"
+                    
+                    # Write the author and date
                     content_string += "<p><small>"+str(formattedarticledate)+"</small></p>"
 
                     # Process the body text
