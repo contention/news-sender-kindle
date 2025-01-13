@@ -8,6 +8,8 @@
 # - Better environment management
 # - Enable self-containment - no need to mount a volume/build files in the container itself
 # - Remove chapter keywords from article titles
+# - Add a way to trigger the script ad-hoc, from a URL for example
+
 
 
 from email.utils import COMMASPACE, formatdate
@@ -47,15 +49,21 @@ EPUB_FILE_NAME="theguardian.epub"
 MOBI_FILE_NAME="theguardian.mobi"
 
 
-# Function to create a cover image
-def create_cover():
+# Function to return human readable time
+def human_readable_time():
     now = datetime.datetime.now()
     local_tz = get_localzone()
-    timereadable = now.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
-    img = Image.new('RGB', (600, 800), color = (73, 109, 137))
+    return now.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
+
+
+# Function to create a cover image
+def create_cover():
+    largeFont = ImageFont.truetype("Poppins-Bold.ttf", 60)
+    smallFont = ImageFont.truetype("Poppins-Bold.ttf", 40)
+    img = Image.new('RGB', (600, 800), color = (90,90,90))
     cover = ImageDraw.Draw(img)
-    cover.text((50,50), f"News", fill=(255,255,0))
-    cover.text((50,175), f"{timereadable}", fill=(255,255,0))
+    cover.text((50,50), f"The Guardian", font=largeFont, fill=(255,255,255))
+    cover.text((50,175), f"{human_readable_time()}", font=smallFont, fill=(255,255,255))
     img.save(str(OUTPUT_DIRECTORY) + str(COVER_FILE_NAME))
 
 
@@ -93,7 +101,7 @@ def send_mail(send_from, send_to, subject, text, files):
 
 # Function to convert an ebook
 def convert_ebook(input_file, output_file):
-    cmd = ['ebook-convert', input_file, output_file, "--use-auto-toc"]
+    cmd = ['ebook-convert', input_file, output_file, "--use-auto-toc", "--cover", str(OUTPUT_DIRECTORY) + str(COVER_FILE_NAME)]
     process = subprocess.Popen(cmd)
     process.wait()
 
@@ -109,7 +117,7 @@ def createhtml():
     file.write("<html>")
     file.write("<head>")
     file.write("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />")
-    file.write("<title>The Guardian</title>")
+    file.write("<title>The Guardian: " + str(human_readable_time()) + "</title>")
 
     # Write the CSS
     file.write("<style>")
