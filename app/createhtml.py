@@ -9,6 +9,7 @@
 # - Enable self-containment - no need to mount a volume/build files in the container itself
 # - Remove chapter keywords from article titles
 # - Add a way to trigger the script ad-hoc, from a URL for example
+# - add title to meta (https://manual.calibre-ebook.com/generated/en/ebook-convert.html#metadata)
 
 
 
@@ -33,6 +34,7 @@ from tzlocal import get_localzone
 from PIL import Image, ImageDraw, ImageFont
 
 
+# Configuration
 ENCRYPTION = os.getenv("ENCRYPTION")
 EMAIL_SMTP = os.getenv("EMAIL_SMTP")
 EMAIL_SMTP_PORT = int(os.getenv("EMAIL_SMTP_PORT"))
@@ -42,7 +44,7 @@ EMAIL_FROM = os.getenv("EMAIL_FROM")
 KINDLE_EMAIL = os.getenv("KINDLE_EMAIL")
 PANDOC = os.getenv("PANDOC_PATH", "/usr/bin/pandoc")
 
-OUTPUT_DIRECTORY = "/output/"
+OUTPUT_DIRECTORY = "cache/"
 HTML_FILE_NAME="theguardian.html"
 COVER_FILE_NAME="cover.jpg"
 EPUB_FILE_NAME="theguardian.epub"
@@ -50,10 +52,13 @@ MOBI_FILE_NAME="theguardian.mobi"
 
 
 # Function to return human readable time
-def human_readable_time():
-    now = datetime.datetime.now()
+def human_readable_time(time):
+    if time is None:
+        time = datetime.datetime.now()
+    else:
+        time = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
     local_tz = get_localzone()
-    return now.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
+    return time.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
 
 
 # Function to create a cover image
@@ -63,8 +68,20 @@ def create_cover():
     img = Image.new('RGB', (600, 800), color = (90,90,90))
     cover = ImageDraw.Draw(img)
     cover.text((50,50), f"The Guardian", font=largeFont, fill=(255,255,255))
-    cover.text((50,175), f"{human_readable_time()}", font=smallFont, fill=(255,255,255))
+    cover.text((50,175), f"{human_readable_time(None)}", font=smallFont, fill=(255,255,255))
     img.save(str(OUTPUT_DIRECTORY) + str(COVER_FILE_NAME))
+
+
+# Function to process article headers and ids
+def process_chapter_words(text):
+    text = text.replace("chapter", "c&ZeroWidthSpace;hapter")
+    text = text.replace("book", "b&ZeroWidthSpace;ook")
+    text = text.replace("section", "s&ZeroWidthSpace;ection")
+    text = text.replace("prologue", "p&ZeroWidthSpace;rologue")
+    text = text.replace("epilogue", "e&ZeroWidthSpace;pilogue")
+    text = text.replace("part", "p&ZeroWidthSpace;art")
+    return text
+
 
 
 # Send email
@@ -109,6 +126,10 @@ def convert_ebook(input_file, output_file):
 # Function to create an HTML file
 def createhtml():
 
+    # Create cache director if it doesn't exist
+    if not os.path.exists(OUTPUT_DIRECTORY):
+        os.makedirs(OUTPUT_DIRECTORY)
+
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
 
@@ -117,7 +138,7 @@ def createhtml():
     file.write("<html>")
     file.write("<head>")
     file.write("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />")
-    file.write("<title>The Guardian: " + str(human_readable_time()) + "</title>")
+    file.write("<title>The Guardian: " + str(human_readable_time(None)) + "</title>")
 
     # Write the CSS
     file.write("<style>")
@@ -175,28 +196,14 @@ def createhtml():
                 for article in data["response"]["results"]:
 
                     # Format the date into something human readable
-                    # TO DO - this is repeated below, can we refactor?
+                    articledate = human_readable_time(article["webPublicationDate"])
+
+
                     articledate = datetime.datetime.strptime(article["webPublicationDate"], "%Y-%m-%dT%H:%M:%SZ")
                     formattedarticledate = articledate.strftime("%H:%M %A %d %B %Y")
 
-                    # Process the header
-                    article_header = str(article["fields"]["headline"])
-                    article_header = article_header.replace("chapter", "ch@pter")
-                    article_header = article_header.replace("book", "b00k")
-                    article_header = article_header.replace("section", "sect1on")
-                    article_header = article_header.replace("prologue", "pr0logue")
-                    article_header = article_header.replace("epilogue", "ep1logue")
-                    article_header = article_header.replace("part", "p@rt")
-
-                    # Process the ID
-                    article_id = str(article["id"])
-                    article_id = article_id.replace("chapter", "ch@pter")
-                    article_id = article_id.replace("book", "b00k")
-                    article_id = article_id.replace("section", "sect1on")
-                    article_id = article_id.replace("prologue", "pr0logue")
-                    article_id = article_id.replace("epilogue", "ep1logue")
-                    article_id = article_id.replace("part", "p@rt")
-
+                    article_header = process_chapter_words(str(article["fields"]["headline"]))
+                    article_id = process_chapter_words(str(article["id"]))
                     content_string += "<div class='toc-item'><a href='#"+article_id+"'>"+article_header+"</a> <small class='toc-trailtext'>"+str(article["fields"]["trailText"])+" | "+formattedarticledate +"</small></div>"
 
 
@@ -204,30 +211,11 @@ def createhtml():
                 for article in data["response"]["results"]:
 
                     # Format the date into something human readable
-                    # TO DO - this is repeated above, can we refactor?
-                    articledate = datetime.datetime.strptime(article["webPublicationDate"], "%Y-%m-%dT%H:%M:%SZ")
-                    formattedarticledate = articledate.strftime("%H:%M %A %d %B %Y")
+                    articledate = human_readable_time(article["webPublicationDate"])
                     
                     # Write the article content
-
-                    # Process the header
-                    article_header = str(article["fields"]["headline"])
-                    article_header = article_header.replace("chapter", "ch@pter")
-                    article_header = article_header.replace("book", "b00k")
-                    article_header = article_header.replace("section", "sect1on")
-                    article_header = article_header.replace("prologue", "pr0logue")
-                    article_header = article_header.replace("epilogue", "ep1logue")
-                    article_header = article_header.replace("part", "p@rt")
-
-                    # Process the ID
-                    article_id = str(article["id"])
-                    article_id = article_id.replace("chapter", "ch@pter")
-                    article_id = article_id.replace("book", "b00k")
-                    article_id = article_id.replace("section", "sect1on")
-                    article_id = article_id.replace("prologue", "pr0logue")
-                    article_id = article_id.replace("epilogue", "ep1logue")
-                    article_id = article_id.replace("part", "p@rt")
-
+                    article_header = process_chapter_words(str(article["fields"]["headline"]))
+                    article_id = process_chapter_words(str(article["id"]))
                     content_string += "<h2 id='"+article_id+"'>" + article_header +"</h2>"
                     
                     # Write the author and date
