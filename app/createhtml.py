@@ -44,7 +44,7 @@ EMAIL_FROM = os.getenv("EMAIL_FROM")
 KINDLE_EMAIL = os.getenv("KINDLE_EMAIL")
 PANDOC = os.getenv("PANDOC_PATH", "/usr/bin/pandoc")
 
-OUTPUT_DIRECTORY = "cache/"
+OUTPUT_DIRECTORY = "output/"
 HTML_FILE_NAME="theguardian.html"
 COVER_FILE_NAME="cover.jpg"
 EPUB_FILE_NAME="theguardian.epub"
