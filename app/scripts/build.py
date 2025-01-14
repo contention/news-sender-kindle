@@ -128,7 +128,7 @@ def convert_ebook(input_file, output_file):
 def build():
 
     # Set up output
-    yield("Getting started..."  + "<br/>\n")
+    yield("Getting started..."  + "\n\n")
 
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
@@ -173,7 +173,7 @@ def build():
             section_title = section["title"]
 
             # Get data from the Guardian API
-            yield("Fetching data from the Guardian API for section: " + str(section_id) + '<br/>\n')
+            yield("Fetching data from the Guardian API for section: " + str(section_id) + '...\n\n')
             sys.stdout.flush()
 
             apiurl = "https://content.guardianapis.com/search?section=" + str(section_id) + "&type=article&show-fields=all&show-blocks=body&page-size=25&shouldHideAdverts=true&api-key=" + str(os.environ.get("GUARDIAN_API_KEY"))
@@ -185,7 +185,7 @@ def build():
             # Check if the response is ok
             if data["response"]["status"] == "ok":
 
-                yield("...ok!"  + "<br/>\n")
+                yield("...ok!"  + "\n\n")
 
                 # Write the section title toc
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
@@ -237,10 +237,13 @@ def build():
 
             else:
                 # Write an error message
-                yield("...error!" + "<br/>\n")
+                yield("...error!" + "\n\n")
                 toc_string += "<div class='toc-section'>Error fetching the '"+section_title+"' section</div>"
 
             time.sleep(1)
+
+    # Wrigin content into the file
+    yield("Writing HTML File..."  + "\n\n")
 
     # Write the Table of Contents
     file.write("<h1 class='chapter' id='contents'>Contents</h1>")
@@ -256,28 +259,31 @@ def build():
     # Close the file
     file.close()
 
-    yield("HTML file successfully written." + "<br/>\n")
+    yield("...done!" + "\n\n")
 
     # Create the cover image
+    yield("Generating cover image..." + "\n\n")
     create_cover()
-    yield("Cover image generated." + "<br/>\n")
+    yield("...done!" + "\n\n")
     
     # Convert the html to epub
+    yield("Converting HTML file to ePub..." + "\n\n")
     convert_ebook(str(OUTPUT_DIRECTORY) + HTML_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
-    yield("HTML file converted to ePub." + "<br/>\n")
+    yield("...done!" + "\n\n")
 
 
     if os.getenv("SEND_EMAIL") == "True":
-        yield("Sending to kindle email..." + "<br/>\n")
+        yield("Sending to kindle email..." + "\n\n")
         send_mail(send_from=EMAIL_FROM,
                 send_to=[KINDLE_EMAIL],
                 subject="News - ",
                 text="This is your daily news.\n\n--\n\n",
                 files=[str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME])
+        yield("...done!" + "\n\n")
     else:
-        yield("Skipping email sending." + "<br/>\n")
+        yield("Skipping email sending." + "\n\n")
 
-    yield("All done!" + "<br/>\n")
+    yield("All done!" + "\n\n")
 
 
 if __name__ == '__main__':

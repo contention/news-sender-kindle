@@ -7,14 +7,15 @@
     <title>Authenticate</title>
   </head>
   <body>
+    {% include "header.html" %}
     <form
-      action="/build"
+      action="/"
       method="post">
-      <label for="password">Password</label>
+      <label for="password">Password: </label>
       <input
         type="password"
         name="password"
-        id="password" /><br />
+        id="password" />
       <input
         type="submit"
         value="Submit" />

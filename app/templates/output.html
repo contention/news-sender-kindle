@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Type"
+      content="text/html; charset=UTF-8" />
+    <title>Output</title>
+  </head>
+  <body>
+    {% include "header.html" %}
+    <p>Status: <span id="latest">Building...</span></p>
+    <p>Progress:</p>
+    <ul id="output"></ul>
+    <script>
+      var output = document.getElementById("output");
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/buildepub");
+      xhr.send();
+      var position = 0;
+
+      function handleNewData() {
+        var messages = xhr.responseText.split("\n");
+        messages.slice(position, -1).forEach(function (value) {
+          var item = document.createElement("li");
+          item.textContent = value;
+          output.appendChild(item);
+        });
+        position = messages.length - 1;
+      }
+
+      var timer;
+      timer = setInterval(function () {
+        handleNewData();
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+          clearInterval(timer);
+          latest.textContent = "Done";
+        }
+      }, 250);
+    </script>
+  </body>
+</html>
