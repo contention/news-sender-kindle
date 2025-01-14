@@ -20,14 +20,13 @@ def index():
     return flask.render_template('index.html')
 
 
-@app.route("/buildepub", methods=['GET', 'POST'])
-def buildepub():
-    if not flask.session.get('authenticated'):
-        yield('Not authenticated!' + "\n\n")
-        return
+@app.route("/dobuild", methods=['GET', 'POST'])
+def dobuild():
+    if flask.session['authenticated'] == False:
+        return flask.redirect("/")
     else:
         build()
-        return flask.send_file('output.epub', as_attachment=True)
+        return app.response_class(build(), mimetype="text/plain")
 
 
 
