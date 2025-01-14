@@ -1,11 +1,15 @@
-name: News Sender Kindle
+name: Guardian To Kindle
 
 services:
 
   app:
     build: .
+    ports:
+      - ${LOCAL_PORT}:5000
+    user: "1000:1000"
     environment:
       - PYTHONUNBUFFERED=1
+      - SERVER_PASSWORD=${SERVER_PASSWORD}
       - GUARDIAN_API_KEY=${GUARDIAN_API_KEY}
       - ENCRYPTION=${ENCRYPTION}
       - EMAIL_SMTP=${EMAIL_SMTP}
@@ -16,9 +20,7 @@ services:
       - KINDLE_EMAIL=${KINDLE_EMAIL}
       - SEND_EMAIL=${SEND_EMAIL}
     volumes:
-    - type: bind
-      source: app
-      target: /app
-    restart: no
+    - ./app:/app
+    restart: unless-stopped
 
 

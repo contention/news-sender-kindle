@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #TO DO
 # - Improve cover image with image and date/time
 # - Better error handling/logging
@@ -13,11 +15,13 @@
 
 
 
+
 from email.utils import COMMASPACE, formatdate
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 import os
+import sys
 import time
 import datetime
 import urllib.request
@@ -30,7 +34,6 @@ import logging
 import threading
 import subprocess
 import re
-from tzlocal import get_localzone
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -42,9 +45,8 @@ EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_FROM = os.getenv("EMAIL_FROM")
 KINDLE_EMAIL = os.getenv("KINDLE_EMAIL")
-PANDOC = os.getenv("PANDOC_PATH", "/usr/bin/pandoc")
 
-OUTPUT_DIRECTORY = "output/"
+OUTPUT_DIRECTORY = "/output/"
 HTML_FILE_NAME="theguardian.html"
 COVER_FILE_NAME="cover.jpg"
 EPUB_FILE_NAME="theguardian.epub"
@@ -57,14 +59,13 @@ def human_readable_time(time):
         time = datetime.datetime.now()
     else:
         time = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
-    local_tz = get_localzone()
-    return time.astimezone(local_tz).strftime("%H:%M%p\n%A %d %B \n%Y")
+    return time.strftime("%H:%M%p\n%A %d %B \n%Y")
 
 
 # Function to create a cover image
 def create_cover():
-    largeFont = ImageFont.truetype("Poppins-Bold.ttf", 60)
-    smallFont = ImageFont.truetype("Poppins-Bold.ttf", 40)
+    largeFont = ImageFont.truetype("/server/assets/Poppins-Bold.ttf", 60)
+    smallFont = ImageFont.truetype("/server/assets/Poppins-Bold.ttf", 40)
     img = Image.new('RGB', (600, 800), color = (90,90,90))
     cover = ImageDraw.Draw(img)
     cover.text((50,50), f"The Guardian", font=largeFont, fill=(255,255,255))
@@ -123,12 +124,8 @@ def convert_ebook(input_file, output_file):
     process.wait()
 
 
-# Function to create an HTML file
-def createhtml():
-
-    # Create cache director if it doesn't exist
-    if not os.path.exists(OUTPUT_DIRECTORY):
-        os.makedirs(OUTPUT_DIRECTORY)
+# Main function
+def build():
 
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
@@ -164,7 +161,7 @@ def createhtml():
     content_string = ""
 
 
-    with open('sections.json') as fp:
+    with open('/server/config/sections.json') as fp:
         sections = json.load(fp)
 
         # Loop through the sections
@@ -174,6 +171,8 @@ def createhtml():
 
             # Get data from the Guardian API
             print("Fetching data from the Guardian API for section: " + str(section_id))
+            sys.stdout.flush()
+
             apiurl = "https://content.guardianapis.com/search?section=" + str(section_id) + "&type=article&show-fields=all&show-blocks=body&page-size=25&shouldHideAdverts=true&api-key=" + str(os.environ.get("GUARDIAN_API_KEY"))
 
             with urllib.request.urlopen(apiurl) as url:
@@ -184,6 +183,7 @@ def createhtml():
             if data["response"]["status"] == "ok":
 
                 print("...ok!")
+                sys.stdout.flush()
 
                 # Write the section title toc
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
@@ -278,4 +278,4 @@ def createhtml():
 
 
 if __name__ == '__main__':
-    createhtml()
+    build()

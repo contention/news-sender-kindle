@@ -1,9 +1,13 @@
-FROM python:3.10-slim
+FROM python:3.10
 
-RUN apt-get update && apt-get install -y calibre && pip3 install pypandoc_binary pillow pytz tzlocal
+RUN apt-get update && apt-get install -y calibre && pip3 install pillow pytz flask
 
-COPY app/ app/
+RUN mkdir -p /output
+RUN chmod 777 /output
+
+COPY app /app
 
 WORKDIR /app
 
-CMD ["python3", "createhtml.py"]
+CMD ["python", "app.py"]
+

@@ -4,8 +4,16 @@
         "id":"uk-news"
     },
     {
+        "title": "UK Politics",
+        "id":"politics"
+    },
+    {
         "title": "US News",
         "id":"us-news"
+    },
+    {
+        "title": "US Politics",
+        "id":"us-politics"
     },
     {
         "title": "World News",
@@ -14,6 +22,10 @@
     {
         "title": "Society",
         "id":"society"
+    },
+    {
+        "title": "Environment",
+        "id":"environment"
     },
     {
         "title": "Comment Is Free",
@@ -60,12 +72,12 @@
         "id":"money"
     },
     {
-        "title": "Environment",
-        "id":"environment"
+        "title": "Health",
+        "id":"health"
     },
     {
-        "title": "The Filter",
-        "id":"thefilter"
+        "title": "Business",
+        "id":"business"
     },
     {
         "title": "Science",
@@ -82,5 +94,9 @@
     {
         "title": "Global Development",
         "id":"global-development"
+    },
+    {
+        "title": "The Filter",
+        "id":"thefilter"
     }
 ]
