@@ -19,6 +19,7 @@ services:
       - EMAIL_FROM=${EMAIL_FROM}
       - KINDLE_EMAIL=${KINDLE_EMAIL}
       - SEND_EMAIL=${SEND_EMAIL}
+      - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
     volumes:
     - ./app:/app
