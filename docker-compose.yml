@@ -9,7 +9,7 @@ services:
     user: "1000:1000"
     environment:
       - PYTHONUNBUFFERED=1
-      - SERVER_PASSWORD=${SERVER_PASSWORD}
+      - PASSWORD=${PASSWORD}
       - GUARDIAN_API_KEY=${GUARDIAN_API_KEY}
       - ENCRYPTION=${ENCRYPTION}
       - EMAIL_SMTP=${EMAIL_SMTP}
@@ -19,6 +19,7 @@ services:
       - EMAIL_FROM=${EMAIL_FROM}
       - KINDLE_EMAIL=${KINDLE_EMAIL}
       - SEND_EMAIL=${SEND_EMAIL}
+      - DEBUG=${DEBUG}
     volumes:
     - ./app:/app
     restart: unless-stopped
