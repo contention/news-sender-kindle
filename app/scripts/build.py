@@ -64,8 +64,8 @@ def human_readable_time(time):
 
 # Function to create a cover image
 def create_cover():
-    largeFont = ImageFont.truetype("/server/assets/Poppins-Bold.ttf", 60)
-    smallFont = ImageFont.truetype("/server/assets/Poppins-Bold.ttf", 40)
+    largeFont = ImageFont.truetype("/app/assets/Poppins-Bold.ttf", 60)
+    smallFont = ImageFont.truetype("/app/assets/Poppins-Bold.ttf", 40)
     img = Image.new('RGB', (600, 800), color = (90,90,90))
     cover = ImageDraw.Draw(img)
     cover.text((50,50), f"The Guardian", font=largeFont, fill=(255,255,255))
@@ -127,6 +127,9 @@ def convert_ebook(input_file, output_file):
 # Main function
 def build():
 
+    # Set up output
+    yield("Getting started..."  + "<br/>\n")
+
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
 
@@ -161,7 +164,7 @@ def build():
     content_string = ""
 
 
-    with open('/server/config/sections.json') as fp:
+    with open('/app/config/sections.json') as fp:
         sections = json.load(fp)
 
         # Loop through the sections
@@ -170,7 +173,7 @@ def build():
             section_title = section["title"]
 
             # Get data from the Guardian API
-            print("Fetching data from the Guardian API for section: " + str(section_id))
+            yield("Fetching data from the Guardian API for section: " + str(section_id) + '<br/>\n')
             sys.stdout.flush()
 
             apiurl = "https://content.guardianapis.com/search?section=" + str(section_id) + "&type=article&show-fields=all&show-blocks=body&page-size=25&shouldHideAdverts=true&api-key=" + str(os.environ.get("GUARDIAN_API_KEY"))
@@ -182,8 +185,7 @@ def build():
             # Check if the response is ok
             if data["response"]["status"] == "ok":
 
-                print("...ok!")
-                sys.stdout.flush()
+                yield("...ok!"  + "<br/>\n")
 
                 # Write the section title toc
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
@@ -235,7 +237,7 @@ def build():
 
             else:
                 # Write an error message
-                print("...error!")
+                yield("...error!" + "<br/>\n")
                 toc_string += "<div class='toc-section'>Error fetching the '"+section_title+"' section</div>"
 
             time.sleep(1)
@@ -254,27 +256,28 @@ def build():
     # Close the file
     file.close()
 
-    print("HTML file successfully written.")
+    yield("HTML file successfully written." + "<br/>\n")
 
     # Create the cover image
     create_cover()
+    yield("Cover image generated." + "<br/>\n")
     
     # Convert the html to epub
     convert_ebook(str(OUTPUT_DIRECTORY) + HTML_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
+    yield("HTML file converted to ePub." + "<br/>\n")
 
 
     if os.getenv("SEND_EMAIL") == "True":
-        logging.info("Sending to kindle email...")
+        yield("Sending to kindle email..." + "<br/>\n")
         send_mail(send_from=EMAIL_FROM,
                 send_to=[KINDLE_EMAIL],
                 subject="News - ",
                 text="This is your daily news.\n\n--\n\n",
                 files=[str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME])
-        logging.info("Cleaning up...")
-        #os.remove(epubFile)
-        #os.remove(mobiFile)
     else:
-        logging.info("Email sending is disabled. Skipping...")
+        yield("Skipping email sending." + "<br/>\n")
+
+    yield("All done!" + "<br/>\n")
 
 
 if __name__ == '__main__':
