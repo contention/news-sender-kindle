@@ -15,7 +15,7 @@ def index():
         if 'password' in list(flask.request.form):
             if flask.request.form['password'] == os.environ.get("PASSWORD"):
                 flask.session['authenticated'] = True
-                #Launch build here
+                threading.Thread(target=build).start()
                 return flask.render_template('status.html')
             else:
                 flask.session['authenticated'] = False
@@ -24,14 +24,6 @@ def index():
     flask.session['authenticated'] = False      
     return flask.render_template('index.html')
 
-
-@app.route("/dobuild", methods=['GET', 'POST'])
-def dobuild():
-    if flask.session['authenticated'] == False:
-        return flask.redirect("/")
-    else:
-        build()
-        return app.response_class(build(), mimetype="text/plain")
 
 
 @app.route("/status", methods=['GET', 'POST'])

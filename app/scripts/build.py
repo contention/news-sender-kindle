@@ -123,12 +123,18 @@ def convert_ebook(input_file, output_file):
     process = subprocess.Popen(cmd)
     process.wait()
 
+# Function to update status file
+def update_status(status):
+    statusfile = open(str(OUTPUT_DIRECTORY) + "status.txt", "w")
+    statusfile.write(status + "\n")
+    statusfile.close()
+
 
 # Main function
 def build():
 
-    # Set up output
-    yield("Getting started..."  + "\n\n")
+    # Set up status logging
+    update_status("Starting build...")
 
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
@@ -173,7 +179,7 @@ def build():
             section_title = section["title"]
 
             # Get data from the Guardian API
-            yield("Fetching data from the Guardian API for section: " + str(section_id) + '...\n\n')
+            update_status("Fetching data from the Guardian API for section: " + str(section_id) + '...\n\n')
             sys.stdout.flush()
 
             apiurl = "https://content.guardianapis.com/search?section=" + str(section_id) + "&type=article&show-fields=all&show-blocks=body&page-size=25&shouldHideAdverts=true&api-key=" + str(os.environ.get("GUARDIAN_API_KEY"))
@@ -185,7 +191,7 @@ def build():
             # Check if the response is ok
             if data["response"]["status"] == "ok":
 
-                yield("...ok!"  + "\n\n")
+                update_status("...ok!" )
 
                 # Write the section title toc
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
@@ -237,13 +243,13 @@ def build():
 
             else:
                 # Write an error message
-                yield("...error!" + "\n\n")
+                update_status("...error!")
                 toc_string += "<div class='toc-section'>Error fetching the '"+section_title+"' section</div>"
 
             time.sleep(1)
 
     # Wrigin content into the file
-    yield("Writing HTML File..."  + "\n\n")
+    update_status("Writing HTML File..." )
 
     # Write the Table of Contents
     file.write("<h1 class='chapter' id='contents'>Contents</h1>")
@@ -259,31 +265,33 @@ def build():
     # Close the file
     file.close()
 
-    yield("...done!" + "\n\n")
+    update_status("...done!")
 
     # Create the cover image
-    yield("Generating cover image..." + "\n\n")
+    update_status("Generating cover image...")
     create_cover()
-    yield("...done!" + "\n\n")
+    update_status("...done!")
     
     # Convert the html to epub
-    yield("Converting HTML file to ePub..." + "\n\n")
+    update_status("Converting HTML file to ePub...")
     convert_ebook(str(OUTPUT_DIRECTORY) + HTML_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
-    yield("...done!" + "\n\n")
+    update_status("...done!")
 
 
     if os.getenv("SEND_EMAIL") == "True":
-        yield("Sending to kindle email..." + "\n\n")
+        update_status("Sending to kindle email...")
         send_mail(send_from=EMAIL_FROM,
                 send_to=[KINDLE_EMAIL],
                 subject="News - ",
                 text="This is your daily news.\n\n--\n\n",
                 files=[str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME])
-        yield("...done!" + "\n\n")
+        update_status("...done!")
     else:
-        yield("Skipping email sending." + "\n\n")
+        update_status("Skipping email sending.")
 
-    yield("All done!" + "\n\n")
+    update_status("All done!")
+
+
 
 
 if __name__ == '__main__':

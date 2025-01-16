@@ -13,15 +13,15 @@
     <script>
       var output = document.getElementById("output");
 
-      var auto_refresh = setInterval(function(){
+      var auto_refresh = setInterval(function () {
         var xhr = new XMLHttpRequest();
-        xhr.onload = function() {
+        xhr.onload = function () {
           output.textContent = xhr.responseText;
           console.log(xhr.responseText);
-        }
+        };
         xhr.open("GET", "/status");
         xhr.send();
-    }, 2000); // refresh every 2 seconds
+      }, 500); // refresh every half a second
     </script>
   </body>
 </html>
