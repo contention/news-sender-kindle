@@ -9,14 +9,26 @@ app = flask.Flask(__name__, static_folder='static', static_url_path='')
 app.secret_key = os.environ.get("SECRET_KEY")
 CORS(app)
 
+def getstatus():
+    if os.path.isfile("/output/status.txt"):
+        f = open("/output/status.txt", "r")
+        statustext = f.read()
+        f.close()
+        return statustext
+    else:
+        return "No status found"
+
 @app.route("/", methods=['GET', 'POST'])
 def index():
     if flask.request.method == 'POST':
+        status = getstatus()
+        if "Building" in status:
+            return flask.render_template('error.html')
         if 'password' in list(flask.request.form):
             if flask.request.form['password'] == os.environ.get("PASSWORD"):
                 flask.session['authenticated'] = True
                 threading.Thread(target=build).start()
-                return flask.render_template('building.html')
+                return flask.render_template('index.html')
             else:
                 flask.session['authenticated'] = False
                 return flask.render_template('error.html')
@@ -27,15 +39,8 @@ def index():
 
 
 @app.route("/status", methods=['GET', 'POST'])
-def checkstatus():
-    if os.path.isfile("/output/status.txt"):
-        f = open("/output/status.txt", "r")
-        statustext = f.read()
-        f.close()
-        return app.response_class(statustext, mimetype="text/plain")
-        
-    else:
-        return app.response_class("No status", mimetype="text/plain")
+def status():
+    return app.response_class(getstatus(), mimetype="text/plain")
     
 
 

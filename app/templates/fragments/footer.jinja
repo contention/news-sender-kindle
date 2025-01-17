@@ -7,14 +7,14 @@
     let text = await response.text();
     statusField.textContent = text;
 
-    if (text.includes("All done!")) {
+    if (!text.includes("Building")) {
       clearInterval(startWatching);
     }
   };
 
   const startWatching = setInterval(function () {
     getStatus();
-  }, 500);
+  }, 250);
 </script>
 
 </body>

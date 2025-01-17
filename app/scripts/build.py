@@ -134,7 +134,7 @@ def update_status(status):
 def build():
 
     # Set up status logging
-    update_status("Starting build...")
+    update_status("Building | Starting build...")
 
     # Open a file
     file = open(str(OUTPUT_DIRECTORY) + str(HTML_FILE_NAME), "w")
@@ -179,7 +179,7 @@ def build():
             section_title = section["title"]
 
             # Get data from the Guardian API
-            update_status("Fetching data from the Guardian API for section: " + str(section_id) + '...\n\n')
+            update_status("Building | Fetching data for section: " + str(section_id))
             sys.stdout.flush()
 
             apiurl = "https://content.guardianapis.com/search?section=" + str(section_id) + "&type=article&show-fields=all&show-blocks=body&page-size=25&shouldHideAdverts=true&api-key=" + str(os.environ.get("GUARDIAN_API_KEY"))
@@ -190,8 +190,6 @@ def build():
 
             # Check if the response is ok
             if data["response"]["status"] == "ok":
-
-                update_status("...ok!" )
 
                 # Write the section title toc
                 toc_string += "<div class='toc-section'><a href='#"+str(section_id)+"'>"+str(section_title)+"</a></div>"
@@ -243,13 +241,13 @@ def build():
 
             else:
                 # Write an error message
-                update_status("...error!")
+                update_status("Building | There was an error. Skipping that section!")
                 toc_string += "<div class='toc-section'>Error fetching the '"+section_title+"' section</div>"
 
             time.sleep(1)
 
     # Wrigin content into the file
-    update_status("Writing HTML File..." )
+    update_status("Building | Writing HTML File..." )
 
     # Write the Table of Contents
     file.write("<h1 class='chapter' id='contents'>Contents</h1>")
@@ -265,29 +263,24 @@ def build():
     # Close the file
     file.close()
 
-    update_status("...done!")
-
     # Create the cover image
-    update_status("Generating cover image...")
+    update_status("Building | Generating cover image...")
     create_cover()
-    update_status("...done!")
     
     # Convert the html to epub
-    update_status("Converting HTML file to ePub...")
+    update_status("Building | Converting HTML file to ePub...")
     convert_ebook(str(OUTPUT_DIRECTORY) + HTML_FILE_NAME, str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME)
-    update_status("...done!")
 
 
     if os.getenv("SEND_EMAIL") == "True":
-        update_status("Sending to kindle email...")
+        update_status("Building | Sending to Kindle email...")
         send_mail(send_from=EMAIL_FROM,
                 send_to=[KINDLE_EMAIL],
                 subject="News - ",
                 text="This is your daily news.\n\n--\n\n",
                 files=[str(OUTPUT_DIRECTORY) + EPUB_FILE_NAME])
-        update_status("...done!")
     else:
-        update_status("Skipping email sending.")
+        update_status("Building | Skipping email sending...")
 
     update_status("All done! Latest edition built at " + str(human_readable_time(None)))
 
