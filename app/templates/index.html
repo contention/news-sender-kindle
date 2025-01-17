@@ -1,24 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta
-      http-equiv="Content-Type"
-      content="text/html; charset=UTF-8" />
-    <title>G2K</title>
-  </head>
-  <body>
-    {% include "header.html" %}
-    <form
-      action="/"
-      method="post">
-      <label for="password">Password: </label>
-      <input
-        type="password"
-        name="password"
-        id="password" />
-      <input
-        type="submit"
-        value="Submit" />
-    </form>
-  </body>
-</html>
+{% include "fragments/header.jinja" %}
+<h1>Build and send a new edition?</h1>
+<form
+  action="/"
+  method="post">
+  <label for="password">Password: </label>
+  <input
+    type="password"
+    name="password"
+    id="password" />
+  <input
+    type="submit"
+    value="Submit" />
+</form>
+
+{% include "fragments/footer.jinja" %}

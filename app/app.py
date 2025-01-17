@@ -16,7 +16,7 @@ def index():
             if flask.request.form['password'] == os.environ.get("PASSWORD"):
                 flask.session['authenticated'] = True
                 threading.Thread(target=build).start()
-                return flask.render_template('status.html')
+                return flask.render_template('building.html')
             else:
                 flask.session['authenticated'] = False
                 return flask.render_template('error.html')

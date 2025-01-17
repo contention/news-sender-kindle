@@ -1,0 +1,22 @@
+
+<script>
+  var statusField = document.getElementById("statusField");
+
+  const getStatus = async () => {
+    const response = await fetch("/status");
+    let text = await response.text();
+    statusField.textContent = text;
+
+    if (text.includes("All done!")) {
+      clearInterval(startWatching);
+    }
+  };
+
+  const startWatching = setInterval(function () {
+    getStatus();
+  }, 500);
+</script>
+
+</body>
+</html>
+

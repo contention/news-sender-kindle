@@ -289,7 +289,7 @@ def build():
     else:
         update_status("Skipping email sending.")
 
-    update_status("All done!")
+    update_status("All done! Latest edition built at " + str(human_readable_time(None)))
 
 
 
